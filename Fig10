@@ -1,0 +1,93 @@
+%% Fig. 10: RMAB Benchmark Comparison Parameters
+% Parameters used to generate the simulation results presented in Fig. 10
+% of the paper:
+% "Distributed Learning in Markovian Restless Bandits over Interference
+% Graphs for Stable Spectrum Sharing."
+%
+% This experiment compares SMILE with RCA, DSEE, and DSSL.
+
+%% Simulation horizon
+max_T  = 100000;
+t_grid = 1000;
+t_vec  = t_grid:t_grid:max_T;
+
+%% Network parameters
+L = 3;
+S = 6;
+
+% Exploration parameter
+epsilon = 0;
+
+%% Interference neighborhood sets
+% N_l_mat{l} contains the neighbors of cell l.
+N_l_mat = cell(L,1);
+N_l_mat{1} = [2];
+N_l_mat{2} = [1];
+N_l_mat{3} = [];
+
+%% Markov channel parameters
+% Each channel follows a two-state restless Markov process.
+N = 2;
+
+P_1 = [0.80, 0.20;
+       0.20, 0.80];
+
+P_2 = [0.70, 0.30;
+       0.30, 0.70];
+
+P_3 = [0.65, 0.35;
+       0.35, 0.65];
+
+P_4 = [0.62, 0.38;
+       0.38, 0.62];
+
+P_5 = [0.58, 0.42;
+       0.42, 0.58];
+
+P_6 = [0.54, 0.46;
+       0.46, 0.54];
+
+% One transition matrix for each channel.
+P_matrices = {P_1, P_2, P_3, P_4, P_5, P_6};
+
+%% State rewards
+% Rows correspond to the two Markov states.
+% Columns correspond to the L*S = 18 cell-channel pairs.
+%
+% Cell-channel ordering:
+% (1,1),...,(1,6), (2,1),...,(2,6), (3,1),...,(3,6).
+markov_states = [ ...
+    1, 2, 3, 4, 5, 6, ...
+    2, 3, 4, 5, 6, 7, ...
+    3, 4, 5, 6, 7, 8; ...
+    0, 0, 0, 0, 0, 0, ...
+    0, 0, 0, 0, 0, 0, ...
+    0, 0, 0, 0, 0, 0];
+
+%% Consistency checks
+assert(numel(N_l_mat) == L, ...
+    'N_l_mat must contain one neighborhood set for each cell.');
+
+assert(numel(P_matrices) == S, ...
+    'One transition matrix must be specified for each channel.');
+
+for s = 1:S
+    assert(isequal(size(P_matrices{s}), [N, N]), ...
+        'Each transition matrix must be of size N-by-N.');
+
+    assert(all(abs(sum(P_matrices{s},2) - 1) < 1e-12), ...
+        'Each row of every transition matrix must sum to one.');
+end
+
+assert(isequal(size(markov_states), [N, L*S]), ...
+    'markov_states must be of size N-by-(L*S).');
+
+for l = 1:L
+    assert(~ismember(l, N_l_mat{l}), ...
+        'A cell cannot appear in its own neighborhood set.');
+
+    for q = N_l_mat{l}
+        assert(ismember(l, N_l_mat{q}), ...
+            'The interference neighborhood relation must be symmetric.');
+    end
+end
