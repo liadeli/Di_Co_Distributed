@@ -35,6 +35,7 @@ end
 %% Markov channel parameters
 % Each channel follows a two-state restless Markov process.
 N = 2;
+markov_states = 10*rand(2,L*S)
 
 % Common transition probability matrix
 P = [0.6, 0.4;
