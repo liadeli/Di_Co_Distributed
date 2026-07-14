@@ -7,9 +7,6 @@
 % This experiment compares SMILE with dE3 and GoT under heterogeneous
 % i.i.d. Gaussian channel rewards.
 
-%% Monte Carlo and simulation horizon
-sim_size = 100;
-
 max_T  = 1000000;
 t_grid = 1000;
 t_vec  = t_grid:t_grid:max_T;
