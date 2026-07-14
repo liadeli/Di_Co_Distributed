@@ -1,0 +1,76 @@
+%% Fig. 8(a): Large-Scale Network Parameters, L = 50 and S = 50
+% Parameters used to generate the simulation results presented in Fig. 8(a)
+% of the paper:
+% "Distributed Learning in Markovian Restless Bandits over Interference
+% Graphs for Stable Spectrum Sharing."
+%
+% Network configuration: L = 50 cells, S = 50 channels.
+
+%% Simulation horizon
+max_T  = 10000000;
+t_grid = 1000;
+t_vec  = t_grid:t_grid:max_T;
+
+%% Network parameters
+L = 50;
+S = 50;
+
+%% Interference neighborhood sets
+% The cells form a line graph:
+% cell 1 is connected only to cell 2,
+% cell L is connected only to cell L-1,
+% and every intermediate cell is connected to its two adjacent cells.
+N_l_mat = cell(1, L);
+
+for l = 1:L
+    if l == 1
+        N_l_mat{l} = l + 1;
+    elseif l == L
+        N_l_mat{l} = l - 1;
+    else
+        N_l_mat{l} = [l - 1, l + 1];
+    end
+end
+
+%% Markov channel parameters
+% Each channel follows a two-state restless Markov process.
+N = 2;
+
+% Common transition probability matrix
+P = [0.6, 0.4;
+     0.4, 0.6];
+
+% Stationary distribution associated with P
+pi_vec = [0.5, 0.5];
+
+%% Consistency checks
+assert(numel(N_l_mat) == L, ...
+    'N_l_mat must contain one neighborhood set for each cell.');
+
+assert(isequal(size(P), [N, N]), ...
+    'The transition matrix P must be of size N-by-N.');
+
+assert(all(abs(sum(P,2) - 1) < 1e-12), ...
+    'Each row of P must sum to one.');
+
+assert(numel(pi_vec) == N, ...
+    'pi_vec must contain one stationary probability per Markov state.');
+
+assert(abs(sum(pi_vec) - 1) < 1e-12, ...
+    'The entries of pi_vec must sum to one.');
+
+assert(all(pi_vec >= 0), ...
+    'The stationary probabilities must be nonnegative.');
+
+assert(norm(pi_vec * P - pi_vec, Inf) < 1e-12, ...
+    'pi_vec must be a stationary distribution of P.');
+
+for l = 1:L
+    assert(~ismember(l, N_l_mat{l}), ...
+        'A cell cannot appear in its own neighborhood set.');
+
+    for q = N_l_mat{l}
+        assert(ismember(l, N_l_mat{q}), ...
+            'The interference neighborhood relation must be symmetric.');
+    end
+end
