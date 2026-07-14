@@ -1,0 +1,58 @@
+%% Fig. 5: Small-Network Convergence Parameters
+% Parameters used to generate the simulation results presented in Fig. 5
+% of the paper:
+% "Distributed Learning in Markovian Restless Bandits over Interference
+% Graphs for Stable Spectrum Sharing."
+%
+% Network configuration: L = 3 cells, S = 5 channels.
+
+%% Simulation horizon
+max_T  = 1000000;
+t_grid = 1000;
+t_vec  = t_grid:t_grid:max_T;
+
+%% Network parameters
+L = 3;
+S = 5;
+
+% Exploration parameter
+epsilon = 0;
+
+%% Interference neighborhood sets
+% N_l_mat{l} contains the neighbors of cell l.
+N_l_mat = cell(L,1);
+N_l_mat{1} = [2];
+N_l_mat{2} = [1];
+N_l_mat{3} = [];
+
+%% Markov channel parameters
+% Number of channel states
+N = 6;
+
+% Common transition probability matrix
+P = [3/6, 2/6, 1/6,   0,   0,   0;
+     2/8, 3/8, 2/8, 1/8,   0,   0;
+     1/9, 2/9, 3/9, 2/9, 1/9,   0;
+       0, 1/9, 2/9, 3/9, 2/9, 1/9;
+       0,   0, 1/8, 2/8, 3/8, 2/8;
+       0,   0,   0, 1/6, 2/6, 3/6];
+
+%% Expected transmission-rate matrix
+% Rows correspond to cells and columns correspond to channels.
+% Units: Mbps.
+mu_mat = [45, 10, 35, 25, 80;
+          30, 45, 20, 75, 90;
+          55,  5, 70, 15, 45];
+
+%% Consistency checks
+assert(isequal(size(P), [N, N]), ...
+    'The transition matrix P must be of size N-by-N.');
+
+assert(all(abs(sum(P,2) - 1) < 1e-12), ...
+    'Each row of P must sum to one.');
+
+assert(isequal(size(mu_mat), [L, S]), ...
+    'The matrix mu_mat must be of size L-by-S.');
+
+assert(numel(N_l_mat) == L, ...
+    'N_l_mat must contain one neighborhood set for each cell.');
