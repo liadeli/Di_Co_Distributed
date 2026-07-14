@@ -1,0 +1,124 @@
+%% Fig. 14: Dynamic Traffic and Queueing Parameters
+% Parameters used for the dynamic-traffic and queueing experiment presented
+% in Fig. 14 of the paper:
+% "Distributed Learning in Markovian Restless Bandits over Interference
+% Graphs for Stable Spectrum Sharing."
+%
+% Network configuration: L = 10 cells, S = 5 channels.
+
+%% Simulation horizon
+max_T  = 1000000;
+t_grid = 1000;
+t_vec  = t_grid:t_grid:max_T;
+
+%% Network parameters
+L = 10;
+S = 5;
+
+%% Dynamic traffic parameters
+% Packet arrivals follow a Poisson process.
+traffic_load = 0.90;
+
+% Standard MTU packet size: 1500 bytes = 12000 bits.
+packet_size_bytes = 1500;
+packet_size_bits  = 8 * packet_size_bytes;
+
+%% Interference neighborhood sets
+% N_l_mat1{l} contains the neighbors of cell l.
+N_l_mat1 = cell(L,1);
+
+N_l_mat1{1}  = [2];
+N_l_mat1{2}  = [1, 3];
+N_l_mat1{3}  = [2];
+N_l_mat1{4}  = [5];
+N_l_mat1{5}  = [4];
+N_l_mat1{6}  = [];
+N_l_mat1{7}  = [];
+N_l_mat1{8}  = [];
+N_l_mat1{9}  = [];
+N_l_mat1{10} = [];
+
+%% Markov channel parameters
+% Each cell-channel pair follows a two-state restless Markov process.
+N = 2;
+
+P_1 = [0.80, 0.20;
+       0.20, 0.80];
+
+P_2 = [0.70, 0.30;
+       0.30, 0.70];
+
+P_3 = [0.65, 0.35;
+       0.35, 0.65];
+
+P_4 = [0.62, 0.38;
+       0.38, 0.62];
+
+P_5 = [0.58, 0.42;
+       0.42, 0.58];
+
+P_6 = [0.54, 0.46;
+       0.46, 0.54];
+
+% All transition matrices that were provided.
+P_matrices = {P_1, P_2, P_3, P_4, P_5, P_6};
+
+% The simulation uses S = 5 channels.
+P_channels = {P_1, P_2, P_3, P_4, P_5};
+
+%% State rewards
+% First row: bad-state transmission rates.
+% Second row: heterogeneous good-state transmission rates.
+% Units: Mbps.
+%
+% Note:
+% For L = 10 and S = 5, L*S = 50 cell-channel pairs are expected.
+% The supplied data contain 43 pairs and are stored exactly as provided.
+markov_states = [ ...
+    0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, ...
+    0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, ...
+    0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, ...
+    0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, ...
+    0.1, 0.1, 0.1; ...
+     12, 164, 20, 14, 10, 28, 13, 192, 19, 24, ...
+     15,  26, 22, 13, 19, 21, 23,  78, 18, 142, ...
+     29,  11, 17, 11, 14, 135, 15,  16, 30,  24, ...
+     12,  21, 20, 25, 18, 25, 113, 12, 17,  27, ...
+     30, 100, 23];
+
+num_pairs_expected = L * S;
+num_pairs_provided = size(markov_states, 2);
+
+%% Consistency checks
+assert(numel(N_l_mat1) == L, ...
+    'N_l_mat1 must contain one neighborhood set for each cell.');
+
+assert(numel(P_channels) == S, ...
+    'P_channels must contain one transition matrix per channel.');
+
+for s = 1:S
+    assert(isequal(size(P_channels{s}), [N, N]), ...
+        'Each transition matrix must be of size N-by-N.');
+
+    assert(all(abs(sum(P_channels{s},2) - 1) < 1e-12), ...
+        'Each row of every transition matrix must sum to one.');
+end
+
+assert(size(markov_states,1) == N, ...
+    'markov_states must contain exactly N reward rows.');
+
+assert(all(markov_states(1,:) == 0.1), ...
+    'All bad-state transmission rates must equal 0.1 Mbps.');
+
+assert(traffic_load > 0 && traffic_load < 1, ...
+    'traffic_load must lie strictly between zero and one.');
+
+for l = 1:L
+    assert(~ismember(l, N_l_mat1{l}), ...
+        'A cell cannot appear in its own neighborhood set.');
+
+    for q = N_l_mat1{l}
+        assert(ismember(l, N_l_mat1{q}), ...
+            'The interference neighborhood relation must be symmetric.');
+    end
+end
