@@ -1,0 +1,64 @@
+%% Fig. 12: Heterogeneous i.i.d. Channel Comparison Parameters
+% Parameters used to generate the simulation results presented in Fig. 12
+% of the paper:
+% "Distributed Learning in Markovian Restless Bandits over Interference
+% Graphs for Stable Spectrum Sharing."
+%
+% This experiment compares SMILE with dE3 and GoT under heterogeneous
+% i.i.d. Gaussian channel rewards.
+
+%% Monte Carlo and simulation horizon
+sim_size = 100;
+
+max_T  = 1000000;
+t_grid = 1000;
+t_vec  = t_grid:t_grid:max_T;
+
+%% Network parameters
+L = 4;
+S = 4;
+
+%% Gaussian noise parameter
+% The instantaneous reward is generated as
+% r_{l,s}(t) = mu_mat(l,s) + z_{l,s}(t),
+% where z_{l,s}(t) is zero-mean Gaussian noise.
+sigma = 0.05;
+
+%% Interference neighborhood sets
+% N_l_mat{l} contains the neighbors of cell l.
+N_l_mat = cell(L,1);
+
+N_l_mat{1} = [2, 3];
+N_l_mat{2} = [1];
+N_l_mat{3} = [1];
+N_l_mat{4} = [];
+
+%% Expected reward matrix
+% Rows correspond to cells and columns correspond to channels.
+mu_mat = [0.20, 0.80, 0.40, 0.10;
+          0.10, 0.90, 0.25, 0.30;
+          0.05, 0.70, 0.50, 0.25;
+          0.30, 0.75, 0.10, 0.40];
+
+%% Consistency checks
+assert(isscalar(sim_size) && sim_size >= 1 && mod(sim_size,1) == 0, ...
+    'sim_size must be a positive integer.');
+
+assert(isequal(size(mu_mat), [L, S]), ...
+    'mu_mat must be of size L-by-S.');
+
+assert(sigma >= 0, ...
+    'sigma must be nonnegative.');
+
+assert(numel(N_l_mat) == L, ...
+    'N_l_mat must contain one neighborhood set for each cell.');
+
+for l = 1:L
+    assert(~ismember(l, N_l_mat{l}), ...
+        'A cell cannot appear in its own neighborhood set.');
+
+    for q = N_l_mat{l}
+        assert(ismember(l, N_l_mat{q}), ...
+            'The interference neighborhood relation must be symmetric.');
+    end
+end
