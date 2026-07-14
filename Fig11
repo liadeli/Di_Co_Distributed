@@ -1,0 +1,73 @@
+%% Fig. 11: i.i.d. Channel Benchmark Comparison Parameters
+% Parameters used to generate the simulation results presented in Fig. 11
+% of the paper:
+% "Distributed Learning in Markovian Restless Bandits over Interference
+% Graphs for Stable Spectrum Sharing."
+%
+% Network configuration: L = 6 cells, S = 6 channels.
+% This experiment considers temporally independent channel realizations.
+
+%% Simulation horizon
+max_T  = 10000;
+t_grid = 1;
+t_vec  = t_grid:t_grid:max_T;
+
+%% Network parameters
+L = 6;
+S = 6;
+
+% Exploration parameter
+epsilon = 0;
+
+%% Interference neighborhood sets
+% The network consists of two fully connected groups:
+% cells {1,2,3} and cells {4,5,6}.
+N_l_mat = cell(1, L);
+
+N_l_mat{1} = [2, 3];
+N_l_mat{2} = [1, 3];
+N_l_mat{3} = [1, 2];
+N_l_mat{4} = [5, 6];
+N_l_mat{5} = [4, 6];
+N_l_mat{6} = [4, 5];
+
+%% i.i.d. channel parameters
+% Success probabilities associated with the six channels.
+% These probabilities remain constant over time, so the channel
+% realizations are independent and identically distributed across slots.
+p_iid = [1.0, 0.9, 0.8, 0.7, 0.6, 0.5];
+
+%% Reward states
+% The first entry is the reward in the good state.
+% The second entry is the reward in the bad state.
+reward_states = [1.0;
+                 0.1];
+
+%% Expected reward per channel
+% Since each channel is in the good state with probability p_iid(s),
+% its expected reward is:
+mu_channels = p_iid .* reward_states(1) + ...
+              (1 - p_iid) .* reward_states(2);
+
+%% Consistency checks
+assert(numel(N_l_mat) == L, ...
+    'N_l_mat must contain one neighborhood set for each cell.');
+
+assert(numel(p_iid) == S, ...
+    'p_iid must contain one success probability per channel.');
+
+assert(all(p_iid >= 0 & p_iid <= 1), ...
+    'All entries of p_iid must lie in the interval [0,1].');
+
+assert(numel(reward_states) == 2, ...
+    'reward_states must contain exactly two reward values.');
+
+for l = 1:L
+    assert(~ismember(l, N_l_mat{l}), ...
+        'A cell cannot appear in its own neighborhood set.');
+
+    for q = N_l_mat{l}
+        assert(ismember(l, N_l_mat{q}), ...
+            'The interference neighborhood relation must be symmetric.');
+    end
+end
